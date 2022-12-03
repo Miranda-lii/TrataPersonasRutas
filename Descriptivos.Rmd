@@ -1,0 +1,102 @@
+---
+title: 'Trata de Personas: principales rutasa y movimientos en el mundo'
+author: "Lilliana Miranda"
+date: "2022-09-23"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(openxlsx)
+library(dplyr)
+
+datos <- read.xlsx("The Global Dataset 14 Apr 2020.xlsx")
+#base <- read.csv("The Global Dataset 14 Apr 2020.csv", sep = ",")
+```
+
+```{r}
+sum(is.na(datos))
+is.na(datos) 
+trata <- datos[,c(2,4,5,9,28,37,58,59)]
+
+trata %>% 
+  select(gender, yearOfRegistration)%>%
+  group_by(gender, yearOfRegistration) %>%
+   summarise(n = n())
+
+
+sum(is.na(datos$yearOfRegistration))
+
+apply(is.na(trata), 2, mean) #porcentaje de NA por columna
+
+trata <- na.omit(trata)
+sum(is.na(trata))
+names(trata)
+
+table(trata$yearOfRegistration)
+table(trata$gender)
+table(trata$ageBroad)
+table(trata$citizenship)
+table(trata$meansOfControlConcatenated)
+table(trata$typeOfExploitConcatenated)
+table(trata$RecruiterRelationship)
+table(trata$CountryOfExploitation)
+
+citation("ggplot2")
+citation("sf")
+citation("maps")
+citation("terra")
+citation("dplyr")
+citation("tidyr")
+citation("readxl")
+citation("spData")
+citation("geosphere")
+citation("spDataLarge")
+citation("raster")
+```
+
+```{r}
+#write.xlsx(trata, file = "trata.xlsx") para ver los 99 en excel y valorar cuales variables dejar
+```
+
+```{r}
+final <-trata[,c(1:4,6,8)]
+
+final$eliminar <- ifelse(final$ageBroad == "-99"| final$citizenship== "-99" | final$typeOfExploitConcatenated == "-99" | final$CountryOfExploitation == "-99", 1,0)
+table(final$eliminar)
+base <- final[final$eliminar == 0,]
+
+table(base$yearOfRegistration, useNA = "always")
+table(base$gender, useNA = "always")
+table(base$ageBroad, useNA = "always")
+table(base$citizenship, useNA = "always")
+table(base$typeOfExploitConcatenated, useNA = "always")
+table(base$CountryOfExploitation, useNA = "always")
+
+table(base$eliminar) 
+
+save(base, file = "base.Rdata")
+
+
+#write.xlsx(base, file = "base.xlsx")
+
+
+```
+
+```{r}
+load("base.Rdata")
+
+library(ggplot2)
+ggplot(base, aes(x= as.factor(yearOfRegistration)))+
+    geom_bar(fill = "light blue") +
+  labs(y="Personas", x="Año")
+#theme(axis.text.x = element_text(colour = "white"))+
+  # theme(panel.background=element_rect(fill = "white", colour = "white"))
+
+```
+
